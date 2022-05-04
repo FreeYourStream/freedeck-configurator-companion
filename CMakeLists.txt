@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
+# set(CMAKE_SYSTEM_NAME Windows)
+# set(CMAKE_C_COMPILER /usr/bin/i686-w64-mingw32-gcc)
+# set(CMAKE_CXX_COMPILER /usr/bin/i686-w64-mingw32-g++aa)
 include(FetchContent)
 
 
@@ -21,6 +24,13 @@ FetchContent_Declare(
   GIT_TAG        master
 )
 FetchContent_MakeAvailable(json)
+
+FetchContent_Declare(
+  traypp
+  GIT_REPOSITORY https://github.com/Soundux/traypp.git
+  GIT_TAG        master
+)
+FetchContent_MakeAvailable(traypp)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 #add_subdirectory(${cpphttplib_SOURCE_DIR})
@@ -32,6 +42,7 @@ add_executable(${PROJECT_NAME} main.cpp)
 #     CXX_STANDARD_REQUIRED ON
 # )
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC httplib nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PUBLIC httplib nlohmann_json tray)
 file(COPY "scripts" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+file(COPY "icon.ico" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 # file(COPY "windows.ps1" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
