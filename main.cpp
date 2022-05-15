@@ -11,6 +11,7 @@
 
 #include "tray.hpp"
 
+#define IS_WINDOWS defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 
 using namespace std;
 namespace fs = filesystem;
@@ -20,7 +21,7 @@ using json = nlohmann::json;
 httplib::Server svr;
 
 std::string execCommand(const std::string cmd, int& out_exitStatus) {
-	#ifndef popen
+	#if IS_WINDOWS
 	#define popen _popen
 	#define pclose _pclose
 	#endif
@@ -88,7 +89,7 @@ int main(int argc, char** argv) {
 		int exit_status;
 		char pBuf[256];
 		size_t len = sizeof(pBuf);
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if IS_WINDOWS
 		int bytes = GetModuleFileName(NULL, pBuf, len);
 		if (bytes >= 0)
 			pBuf[bytes] = '\0';
