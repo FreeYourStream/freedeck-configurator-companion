@@ -11,10 +11,6 @@
 
 #include "tray.hpp"
 
-#ifndef popen
-#define popen _popen
-#define pclose _pclose
-#endif
 
 using namespace std;
 namespace fs = filesystem;
@@ -57,16 +53,16 @@ void add_cors(const httplib::Request& req, httplib::Response& res) {
 	res.set_header("Access-Control-Allow-Origin", req.get_header_value("Origin").c_str());
 	res.set_header("Allow", "GET, POST, HEAD, OPTIONS");
 	res.set_header("Access-Control-Allow-Headers",
-				   "X-Requested-With, Content-Type, Accept, Origin, Authorization");
+					 "X-Requested-With, Content-Type, Accept, Origin, Authorization");
 	res.set_header("Access-Control-Allow-Methods", "OPTIONS, GET, POST, HEAD");
 }
 
 int main(int argc, char** argv) {
-  Tray::Tray tray("My Tray", "icon.ico");
-  tray.addEntry(Tray::Button("Exit", [&]{
+	Tray::Tray tray("My Tray", "icon.ico");
+	tray.addEntry(Tray::Button("Exit", [&]{
 		svr.stop();
-    tray.exit();
-  }));
+		tray.exit();
+	}));
 	svr.set_error_handler([](const auto& req, auto& res) {
 		auto fmt = "<p>Error Status: <span style='color:red;'>%d</span></p>";
 		char buf[BUFSIZ];
@@ -89,6 +85,10 @@ int main(int argc, char** argv) {
 		char pBuf[256];
 		size_t len = sizeof(pBuf);
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		#ifndef popen
+		#define popen _popen
+		#define pclose _pclose
+		#endif
 		int bytes = GetModuleFileName(NULL, pBuf, len);
 		if (bytes >= 0)
 			pBuf[bytes] = '\0';
@@ -97,12 +97,12 @@ int main(int argc, char** argv) {
 		string result =
 			execCommand("powershell.exe -ExecutionPolicy ByPass -File " + location.string() + "scripts/windows.ps1", exit_status);
 #else
-    int bytes = MIN(readlink("/proc/self/exe", pBuf, len), len - 1);
-    if(bytes >= 0)
-      pBuf[bytes] = '\0';
-    fs::path location = pBuf;
-    location.remove_filename();
-    string result = execCommand("bash " + location.string() + "/scripts/linux.sh", exit_status);
+		int bytes = MIN(readlink("/proc/self/exe", pBuf, len), len - 1);
+		if(bytes >= 0)
+			pBuf[bytes] = '\0';
+		fs::path location = pBuf;
+		location.remove_filename();
+		string result = execCommand("bash " + location.string() + "/scripts/linux.sh", exit_status);
 #endif
 		res.set_content(result, "text/plain");
 	});
@@ -114,6 +114,6 @@ int main(int argc, char** argv) {
 		return 0;
 	});
 
-  tray.run();
+	tray.run();
 	server_thread.join();
 }
