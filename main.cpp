@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <chrono>
 #include <ctime>
@@ -35,11 +36,9 @@ std::string execCommand(const std::string cmd, int& out_exitStatus) {
 	}
 
 	auto rc = ::pclose(pPipe);
-
-	if (WIFEXITED(rc)) {
-		out_exitStatus = WEXITSTATUS(rc);
+	if (rc == -1) {
+		throw std::runtime_error("Cannot close pipe");
 	}
-
 	return result;
 }
 
@@ -61,6 +60,7 @@ void add_cors(const httplib::Request& req, httplib::Response& res) {
 int main(int argc, char** argv) {
   Tray::Tray tray("My Tray", "icon.ico");
   tray.addEntry(Button("Exit", [&]{
+		svr.stop();
     tray.exit();
   }));
 	svr.set_error_handler([](const auto& req, auto& res) {
@@ -98,7 +98,14 @@ int main(int argc, char** argv) {
 #endif
 		res.set_content(result, "text/plain");
 	});
+
 	cout << "Server listening on 8080\n";
-	svr.listen("0.0.0.0", 8080);
-  // tray.run();
+
+	std::thread server_thread([]() {
+		svr.listen("0.0.0.0", 8080);
+		return 0;
+	});
+
+  tray.run();
+	server_thread.join();
 }
