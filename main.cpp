@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include <chrono>
+#include <filesystem>
 #include <ctime>
 #include <iostream>
 
@@ -10,11 +11,14 @@
 
 #include "tray.hpp"
 
+#ifndef popen
+#define popen _popen
+#define pclose _pclose
+#endif
+
 using namespace std;
-namespace fs = std::filesystem;
+namespace fs = filesystem;
 using json = nlohmann::json;
-using Tray::Tray;
-using Tray::Button;
 
 // HTTP
 httplib::Server svr;
@@ -59,7 +63,7 @@ void add_cors(const httplib::Request& req, httplib::Response& res) {
 
 int main(int argc, char** argv) {
   Tray::Tray tray("My Tray", "icon.ico");
-  tray.addEntry(Button("Exit", [&]{
+  tray.addEntry(Tray::Button("Exit", [&]{
 		svr.stop();
     tray.exit();
   }));
@@ -86,8 +90,12 @@ int main(int argc, char** argv) {
 		size_t len = sizeof(pBuf);
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 		int bytes = GetModuleFileName(NULL, pBuf, len);
+		if (bytes >= 0)
+			pBuf[bytes] = '\0';
+		fs::path location = pBuf;
+		location.remove_filename();
 		string result =
-			execCommand("powershell.exe -ExecutionPolicy ByPass -File windows.ps1", exit_status);
+			execCommand("powershell.exe -ExecutionPolicy ByPass -File " + location.string() + "scripts/windows.ps1", exit_status);
 #else
     int bytes = MIN(readlink("/proc/self/exe", pBuf, len), len - 1);
     if(bytes >= 0)
