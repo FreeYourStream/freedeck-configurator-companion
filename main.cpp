@@ -20,6 +20,10 @@ using json = nlohmann::json;
 httplib::Server svr;
 
 std::string execCommand(const std::string cmd, int& out_exitStatus) {
+	#ifndef popen
+	#define popen _popen
+	#define pclose _pclose
+	#endif
 	out_exitStatus = 0;
 	auto pPipe = ::popen(cmd.c_str(), "r");
 	if (pPipe == nullptr) {
@@ -85,10 +89,6 @@ int main(int argc, char** argv) {
 		char pBuf[256];
 		size_t len = sizeof(pBuf);
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-		#ifndef popen
-		#define popen _popen
-		#define pclose _pclose
-		#endif
 		int bytes = GetModuleFileName(NULL, pBuf, len);
 		if (bytes >= 0)
 			pBuf[bytes] = '\0';
