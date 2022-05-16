@@ -19,6 +19,7 @@ using json = nlohmann::json;
 
 // HTTP
 httplib::Server svr;
+fs::path location;
 
 std::string execCommand(const std::string cmd, int& out_exitStatus) {
 	#if IS_WINDOWS
@@ -63,7 +64,22 @@ void add_cors(const httplib::Request& req, httplib::Response& res) {
 }
 
 int main(int argc, char** argv) {
-	Tray::Tray tray("My Tray", "icon.ico");
+	char pBuf[256];
+	size_t len = sizeof(pBuf);
+#if IS_WINDOWS
+	int bytes = GetModuleFileName(NULL, pBuf, len);
+#else
+	int bytes = MIN(readlink("/proc/self/exe", pBuf, len), len - 1);
+#endif
+	if(bytes >= 0)
+		pBuf[bytes] = '\0';
+	location = pBuf;
+	location.remove_filename();
+#if IS_WINDOWS
+	Tray::Tray tray("My Tray", location.string() + "/icon.ico");
+#else
+	Tray::Tray tray("My Tray", location.string() + "/icon.png");
+#endif
 	tray.addEntry(Tray::Button("Exit", [&]{
 		svr.stop();
 		tray.exit();
@@ -87,22 +103,10 @@ int main(int argc, char** argv) {
 
 	svr.Get("/window", [argv](const httplib::Request& req, httplib::Response& res) {
 		int exit_status;
-		char pBuf[256];
-		size_t len = sizeof(pBuf);
 #if IS_WINDOWS
-		int bytes = GetModuleFileName(NULL, pBuf, len);
-		if (bytes >= 0)
-			pBuf[bytes] = '\0';
-		fs::path location = pBuf;
-		location.remove_filename();
 		string result =
 			execCommand("powershell.exe -ExecutionPolicy ByPass -File " + location.string() + "scripts/windows.ps1", exit_status);
 #else
-		int bytes = MIN(readlink("/proc/self/exe", pBuf, len), len - 1);
-		if(bytes >= 0)
-			pBuf[bytes] = '\0';
-		fs::path location = pBuf;
-		location.remove_filename();
 		string result = execCommand("bash " + location.string() + "/scripts/linux.sh", exit_status);
 #endif
 		res.set_content(result, "text/plain");
