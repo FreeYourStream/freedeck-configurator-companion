@@ -11,7 +11,6 @@
 
 #include "tray.hpp"
 
-#define IS_WINDOWS defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 
 using namespace std;
 namespace fs = filesystem;
@@ -21,11 +20,21 @@ using json = nlohmann::json;
 httplib::Server svr;
 fs::path location;
 
+#define IS_WINDOWS false
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#define IS_WINDOWS true
+#endif
+
+bool is_windows() {
+	return IS_WINDOWS;
+}
+
 std::string execCommand(const std::string cmd, int& out_exitStatus) {
 	#if IS_WINDOWS
 	#define popen _popen
 	#define pclose _pclose
 	#endif
+
 	out_exitStatus = 0;
 	auto pPipe = ::popen(cmd.c_str(), "r");
 	if (pPipe == nullptr) {
@@ -41,7 +50,7 @@ std::string execCommand(const std::string cmd, int& out_exitStatus) {
 		result.append(buffer.data(), bytes);
 	}
 
-	auto rc = ::pclose(pPipe);
+	auto rc = _pclose(pPipe);
 	if (rc == -1) {
 		throw std::runtime_error("Cannot close pipe");
 	}
