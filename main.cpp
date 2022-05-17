@@ -1,3 +1,8 @@
+#define IS_WINDOWS false
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#define IS_WINDOWS true
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -11,7 +16,6 @@
 
 #include "tray.hpp"
 
-
 using namespace std;
 namespace fs = filesystem;
 using json = nlohmann::json;
@@ -20,10 +24,6 @@ using json = nlohmann::json;
 httplib::Server svr;
 fs::path location;
 
-#define IS_WINDOWS false
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#define IS_WINDOWS true
-#endif
 
 bool is_windows() {
 	return IS_WINDOWS;
@@ -72,10 +72,12 @@ void add_cors(const httplib::Request& req, httplib::Response& res) {
 	res.set_header("Access-Control-Allow-Methods", "OPTIONS, GET, POST, HEAD");
 }
 
+
 int main(int argc, char** argv) {
 	char pBuf[256];
 	size_t len = sizeof(pBuf);
 #if IS_WINDOWS
+	//ShowWindow(GetConsoleWindow(), SW_MINIMIZE);
 	int bytes = GetModuleFileName(NULL, pBuf, len);
 #else
 	int bytes = MIN(readlink("/proc/self/exe", pBuf, len), len - 1);
@@ -113,8 +115,9 @@ int main(int argc, char** argv) {
 	svr.Get("/window", [argv](const httplib::Request& req, httplib::Response& res) {
 		int exit_status;
 #if IS_WINDOWS
-		string result =
-			execCommand("powershell.exe -ExecutionPolicy ByPass -File " + location.string() + "scripts/windows.ps1", exit_status);
+		TCHAR buff[255];
+		GetWindowText(GetForegroundWindow(), buff, 255);
+		string result = buff;
 #else
 		string result = execCommand("bash " + location.string() + "/scripts/linux.sh", exit_status);
 #endif
@@ -131,3 +134,11 @@ int main(int argc, char** argv) {
 	tray.run();
 	server_thread.join();
 }
+
+
+#if IS_WINDOWS
+// pretty ghetto, but it's windows, so i don't care for now :)
+int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR ipCmdLine, int nCmdShow) {
+	main(0, NULL);
+}
+#endif

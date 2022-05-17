@@ -35,7 +35,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 #add_subdirectory(${cpphttplib_SOURCE_DIR})
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-add_executable(${PROJECT_NAME} main.cpp)
+if (WIN32)
+	add_executable(${PROJECT_NAME} WIN32 main.cpp)
+endif ()
+if (UNIX)
+	add_executable(${PROJECT_NAME} main.cpp)
+endif ()
 # set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 # set_target_properties(${PROJECT_NAME} PROPERTIES
 #     CXX_STANDARD 20
@@ -46,3 +51,4 @@ target_link_libraries(${PROJECT_NAME} PUBLIC httplib nlohmann_json tray)
 file(COPY "scripts" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 file(COPY "icon.ico" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 # file(COPY "windows.ps1" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
