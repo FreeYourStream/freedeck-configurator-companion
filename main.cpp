@@ -50,7 +50,7 @@ std::string execCommand(const std::string cmd, int& out_exitStatus) {
 		result.append(buffer.data(), bytes);
 	}
 
-	auto rc = _pclose(pPipe);
+	auto rc = ::pclose(pPipe);
 	if (rc == -1) {
 		throw std::runtime_error("Cannot close pipe");
 	}
@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
 		GetWindowText(GetForegroundWindow(), buff, 255);
 		string result = buff;
 #else
-		string result = execCommand("bash " + location.string() + "/scripts/linux.sh", exit_status);
+		string result = execCommand("/bin/bash -c \"xprop -id $(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) _NET_WM_NAME 2>/dev/null | awk -F= '{print(\\$2)}'\"", exit_status);
 #endif
 		res.set_content(result, "text/plain");
 	});
