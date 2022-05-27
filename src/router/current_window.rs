@@ -1,8 +1,16 @@
-use std::process::Command;
+#[cfg(windows)]
+extern crate winapi;
+use std::{ffi::OsString, os::windows::prelude::OsStringExt, process::Command};
 
 pub fn get() -> rouille::Response {
     if cfg!(target_os = "windows") {
-        rouille::Response::text("not implemented yet")
+        use winapi::um::winuser::{GetForegroundWindow, GetWindowTextW};
+        unsafe {
+            let window = GetForegroundWindow();
+            let mut text: [u16; 512] = [0; 512];
+            let _result = GetWindowTextW(window, text.as_mut_ptr(), text.len() as i32);
+            return rouille::Response::text(OsString::from_wide(&text).to_str().unwrap());
+        }
     } else {
         let mut command = Command::new("sh");
         command
