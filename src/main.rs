@@ -23,7 +23,7 @@ fn main() {
                 cors::corsify(request, response)
             },
             (GET) (/current_window) => {
-                let response = cors::corsify(request, current_window::get());
+                let response = current_window::get();
                 cors::corsify(request, response)
             },
             _ => rouille::Response::empty_404()
