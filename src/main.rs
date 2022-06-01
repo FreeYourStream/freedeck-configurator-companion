@@ -7,23 +7,28 @@ mod current_window;
 #[path = "./lib/system_info.rs"]
 mod system_info;
 
-#[cfg(window)]
-use std::sync::Mutex;
+#[cfg(windows)]
+use std::sync::mpsc;
 
 use std::sync::Mutex;
 use system_info::SystemInfo;
 use tray_item::TrayItem;
 
 fn main() {
-    let icon_name: String = if cfg!(target_os = "linux") {
+    let icon_name: String;
+    #[cfg(windows)]
+    {
+        icon_name = String::from("fd-tray-icon");
+    }
+    #[cfg(target_os = "linux")]
+    {
         gtk::init().unwrap();
         let exe_path = std::env::current_exe().unwrap();
 
         let icon_path = exe_path.parent().unwrap().join("icon.png");
-        String::from(icon_path.to_str().unwrap())
-    } else {
-        String::from("fd-icon-tray")
-    };
+        icon_name = String::from(icon_path.to_str().unwrap())
+    }
+
     #[cfg(windows)]
     let (tx, rx) = mpsc::channel();
 
@@ -48,18 +53,18 @@ fn main() {
 
     let (_handle, sender) = server.stoppable();
 
-    let mut tray = TrayItem::new("Tray", &icon_name).unwrap();
+    let mut tray = TrayItem::new("Tray", &icon_name.as_str()).unwrap();
 
     tray.add_menu_item("Quit", move || {
         sender.send(()).unwrap();
-        println!("Quitting...");
+
         #[cfg(target_os = "linux")]
         gtk::main_quit();
+
         #[cfg(windows)]
-        tx.send(()).unwrap();
+        tx.send(0).unwrap();
     })
     .unwrap();
-    println!("Idle");
 
     #[cfg(target_os = "linux")]
     gtk::main();
@@ -67,10 +72,9 @@ fn main() {
     {
         loop {
             match rx.recv() {
-                Ok(Message::Quit) => break,
+                Ok(0) => break,
                 _ => {}
             }
         }
     }
-    println!("Gone");
 }
