@@ -15,19 +15,15 @@ fn main() {
     #[cfg(target_os = "linux")]
     gtk::init().unwrap();
 
-    let exe_path = std::env::current_exe()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .to_owned();
+    let exe_path = std::env::current_exe().unwrap();
     let icon = if cfg!(windows) {
         "favicon.ico"
     } else {
         "icon.png"
     };
-    let mut tray = TrayItem::new("Example Tray", (exe_path + "/" + icon).as_str()).unwrap();
+    let icon_path = exe_path.parent().unwrap().join(icon);
+    println!("{}", icon_path.to_str().unwrap());
+    let mut tray = TrayItem::new("Example Tray", "fd-tray-icon").unwrap();
 
     tray.add_label("Example Label").unwrap();
 
