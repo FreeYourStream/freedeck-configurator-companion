@@ -1,11 +1,14 @@
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
-use windres::Build;
 
 // Example custom build script.
 fn main() {
-    Build::new().compile("icons.rc").unwrap();
+    #[cfg(windows)]
+    {
+        use windres::Build;
+        Build::new().compile("icons.rc").unwrap();
+    }
     // Tell Cargo that if the given file changes, to rerun this build script.
     let assets = ["icon.png", "favicon.ico"];
     for asset in assets.iter() {

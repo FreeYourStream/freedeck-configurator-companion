@@ -7,31 +7,29 @@ mod current_window;
 #[path = "./lib/system_info.rs"]
 mod system_info;
 
+#[cfg(window)]
+use std::sync::Mutex;
+
 use std::sync::Mutex;
 use system_info::SystemInfo;
 use tray_item::TrayItem;
 
 fn main() {
-    #[cfg(target_os = "linux")]
-    gtk::init().unwrap();
+    let icon_name: String = if cfg!(target_os = "linux") {
+        gtk::init().unwrap();
+        let exe_path = std::env::current_exe().unwrap();
 
-    let exe_path = std::env::current_exe().unwrap();
-    let icon = if cfg!(windows) {
-        "favicon.ico"
+        let icon_path = exe_path.parent().unwrap().join("icon.png");
+        String::from(icon_path.to_str().unwrap())
     } else {
-        "icon.png"
+        String::from("fd-icon-tray")
     };
-    let icon_path = exe_path.parent().unwrap().join(icon);
-    println!("{}", icon_path.to_str().unwrap());
-    let mut tray = TrayItem::new("Example Tray", "fd-tray-icon").unwrap();
-
-    tray.add_label("Example Label").unwrap();
-
-    #[cfg(target_os = "linux")]
-    gtk::main();
+    #[cfg(windows)]
+    let (tx, rx) = mpsc::channel();
 
     let system_info = Mutex::new(SystemInfo::new());
-    rouille::start_server("localhost:8000", move |request| {
+
+    let server = rouille::Server::new("localhost:8000", move |request| {
         if request.method() == "OPTIONS" {
             return cors::corsify(request, rouille::Response::empty_204());
         }
@@ -46,5 +44,33 @@ fn main() {
             },
             _ => rouille::Response::empty_404()
         )
-    });
+    }).unwrap();
+
+    let (_handle, sender) = server.stoppable();
+
+    let mut tray = TrayItem::new("Tray", &icon_name).unwrap();
+
+    tray.add_menu_item("Quit", move || {
+        sender.send(()).unwrap();
+        println!("Quitting...");
+        #[cfg(target_os = "linux")]
+        gtk::main_quit();
+        #[cfg(windows)]
+        tx.send(()).unwrap();
+    })
+    .unwrap();
+    println!("Idle");
+
+    #[cfg(target_os = "linux")]
+    gtk::main();
+    #[cfg(windows)]
+    {
+        loop {
+            match rx.recv() {
+                Ok(Message::Quit) => break,
+                _ => {}
+            }
+        }
+    }
+    println!("Gone");
 }
