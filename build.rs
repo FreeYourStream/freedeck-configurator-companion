@@ -6,16 +6,19 @@ use std::path::PathBuf;
 fn main() {
     #[cfg(windows)]
     {
-        use windres::Build;
-        Build::new().compile("icons.rc").unwrap();
+        use winres::WindowsResource;
+        WindowsResource::new()
+            .set_icon_with_id("./src/icon.ico", "icon")
+            .compile()
+            .unwrap();
     }
     // Tell Cargo that if the given file changes, to rerun this build script.
-    let assets = ["icon.png", "favicon.ico"];
+    let assets = ["icon.png", "icon.ico"];
     for asset in assets.iter() {
         println!("cargo:rerun-if-changed=src/{}", asset);
     }
     println!("cargo:rerun-if-changed=src/icon.png");
-    println!("cargo:rerun-if-changed=src/favicon.ico");
+    println!("cargo:rerun-if-changed=src/icon.ico");
 
     let output_path = get_output_path();
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();

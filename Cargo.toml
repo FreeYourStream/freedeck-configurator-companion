@@ -11,7 +11,7 @@ rouille = "3.5.0"
 tray-item = "0.7.0"
 
 [build-dependencies]
-windres = "0.2.2"
+winres = "*"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.15.5"

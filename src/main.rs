@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 #[macro_use]
 extern crate rouille;
 #[path = "./router/cors.rs"]
@@ -18,7 +19,8 @@ fn main() {
     let icon_name: String;
     #[cfg(windows)]
     {
-        icon_name = String::from("fd-tray-icon");
+        //icon_name = String::from("fd-tray-icon");
+        icon_name = String::from("icon");
     }
     #[cfg(target_os = "linux")]
     {
