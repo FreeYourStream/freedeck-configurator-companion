@@ -30,6 +30,8 @@ jobs:
           rustup override set 1.60
           rustup target add x86_64-pc-windows-gnu
 
+      - uses: Swatinem/rust-cache@v1
+
       - name: install deps
         run: sudo apt install -y libpango-1.0-0 libatk1.0-0 mingw-w64 librust-atk-dev librust-gdk-dev
 
@@ -47,7 +49,7 @@ jobs:
         run: zip -j freedeck-companion-linux ./target/release/freedeck-companion ./target/release/icon.png
 
       - name: zip up windows
-        run: freedeck-companion-windows ./target/x86_64-pc-windows-gnu/release/freedeck-companion.exe
+        run: zip -j freedeck-companion-windows ./target/x86_64-pc-windows-gnu/release/freedeck-companion.exe
 
       - name: release
         uses: actions/create-release@v1
