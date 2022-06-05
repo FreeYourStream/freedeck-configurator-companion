@@ -27,17 +27,17 @@ jobs:
 
       - name: setup rustup
         run: |
-          /usr/bin/rustup override set 1.60
-          /usr/bin/rustup target add x86_64-pc-windows-gnu
+          rustup override set 1.60
+          rustup target add x86_64-pc-windows-gnu
 
       - name: install deps
         run: sudo apt install -y libpango-1.0-0 libatk1.0-0 mingw-w64 librust-atk-dev librust-gdk-dev
 
       - name: compile linux
-        run: /usr/bin/cargo build --release
+        run: cargo build --release
 
       - name: compile windows
-        run: /usr/bin/cargo build --target=x86_64-pc-windows-gnu --release
+        run: cargo build --target=x86_64-pc-windows-gnu --release
 
       - name: version
         run: echo "::set-output name=version::$(./target/release/freedeck-companion -v)"
