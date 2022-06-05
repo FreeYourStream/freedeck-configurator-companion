@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 #[macro_use]
 extern crate rouille;
 #[path = "./router/cors.rs"]
@@ -10,15 +11,22 @@ mod system_info;
 #[cfg(windows)]
 use std::sync::mpsc;
 
+use std::env;
 use std::sync::Mutex;
 use system_info::SystemInfo;
 use tray_item::TrayItem;
 
 fn main() {
+    let args: Vec<_> = env::args().collect();
+    if args.len() > 1 && args[1] == "-v" {
+        println!(env!("CARGO_PKG_VERSION"));
+        return;
+    }
+
     let icon_name: String;
     #[cfg(windows)]
     {
-        icon_name = String::from("fd-tray-icon");
+        icon_name = String::from("icon");
     }
     #[cfg(target_os = "linux")]
     {

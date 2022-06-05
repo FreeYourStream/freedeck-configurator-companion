@@ -1,21 +1,28 @@
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
+use version_check as rustc;
 
-// Example custom build script.
 fn main() {
-    #[cfg(windows)]
-    {
-        use windres::Build;
-        Build::new().compile("icons.rc").unwrap();
+    if !rustc::is_max_version("1.60").unwrap() {
+        panic!("This app requires Rust 1.60 or older.");
+    }
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows" {
+        use winres::WindowsResource;
+        let mut ws = WindowsResource::new();
+        ws.set_icon_with_id("./src/icon.ico", "icon");
+        ws.set_toolkit_path("/usr/bin")
+            .set_windres_path("x86_64-w64-mingw32-windres")
+            .set_ar_path("x86_64-w64-mingw32-ar");
+        ws.compile().unwrap();
     }
     // Tell Cargo that if the given file changes, to rerun this build script.
-    let assets = ["icon.png", "favicon.ico"];
+    let assets = ["icon.png", "icon.ico"];
     for asset in assets.iter() {
         println!("cargo:rerun-if-changed=src/{}", asset);
     }
     println!("cargo:rerun-if-changed=src/icon.png");
-    println!("cargo:rerun-if-changed=src/favicon.ico");
+    println!("cargo:rerun-if-changed=src/icon.ico");
 
     let output_path = get_output_path();
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
