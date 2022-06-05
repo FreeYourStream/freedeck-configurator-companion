@@ -57,22 +57,3 @@ jobs:
           artifacts: "freedeck-companion-linux.zip,freedeck-companion-windows.zip"
           token: ${{ github.token }}
           tag: ${{ steps.version.outputs.version }}
-
-      - name: upload linux artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./freedeck-companion-linux.zip
-          asset_name: freedeck-companion-linux.zip
-          asset_content_type: application/zip
-      - name: upload windows artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./freedeck-companion-windows.zip
-          asset_name: freedeck-companion-windows.zip
-          asset_content_type: application/zip
