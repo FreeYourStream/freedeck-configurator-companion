@@ -30,6 +30,9 @@ jobs:
           rustup override set 1.60
           rustup target add x86_64-pc-windows-gnu
 
+      - name: install deps
+        run: sudo apt install -y libpango-1.0-0
+
       - name: compile linux
         run: cargo build --release
 
